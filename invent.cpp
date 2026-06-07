@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <cctype>
 #include <ctime>
+#include <climits>
 using namespace std;
 
 struct Obat {
@@ -20,9 +21,20 @@ struct DetailStok {
     double hargaLama, hargaBaru;
 };
 
+struct PrioritasObat {
+    string id;
+    string nama;
+    int totalStok;
+    int totalTerjual;
+    int sisaExpired;
+    int kebutuhanRestock;
+    int skorPrioritas;
+};
+
 vector<Obat> daftarObat;
 vector<DetailStok> detailStok;
 int nomorId = 1;
+const int KAPASITAS_MAKSIMAL_GUDANG = 500;
 
 string generateId() {
     stringstream ss;
@@ -35,6 +47,16 @@ string toLowerCase(string teks) {
         teks[i] = tolower(teks[i]);
     }
     return teks;
+}
+
+int hitungTotalStokGudang() {
+    int total = 0;
+
+    for (int i = 0; i < daftarObat.size(); i++) {
+        total += daftarObat[i].totalStok;
+    }
+
+    return total;
 }
 
 int cariObatByNama() {
@@ -280,6 +302,41 @@ void tambahStok() {
     cout << "\nMasukkan Stok yang Ingin Ditambahkan : ";
     cin >> stokTambahan;
 
+    int totalStokGudang = hitungTotalStokGudang();
+    int sisaKapasitas = KAPASITAS_MAKSIMAL_GUDANG - totalStokGudang;
+
+    if (totalStokGudang + stokTambahan > KAPASITAS_MAKSIMAL_GUDANG) {
+        int pilihan;
+
+        cout << "\n=====================================\n";
+        cout << "     KAPASITAS GUDANG TIDAK CUKUP\n";
+        cout << "=====================================\n";
+        cout << "Kapasitas Maksimal  : " << KAPASITAS_MAKSIMAL_GUDANG << endl;
+        cout << "Total Stok Saat Ini : " << totalStokGudang << endl;
+        cout << "Sisa Kapasitas      : " << sisaKapasitas << endl;
+        cout << "Stok yang Diminta   : " << stokTambahan << endl;
+
+        if (sisaKapasitas <= 0) {
+            cout << "\nGudang sudah penuh. Penambahan stok dibatalkan!\n";
+            return;
+        }
+
+        cout << "\nStok yang bisa ditambahkan hanya " << sisaKapasitas << " pcs.\n";
+        cout << "Apakah ingin menambahkan sebanyak " << sisaKapasitas << " saja?\n";
+        cout << "1. Ya\n";
+        cout << "2. Tidak\n";
+        cout << "Pilih: ";
+        cin >> pilihan;
+
+        if (pilihan == 1) {
+            stokTambahan = sisaKapasitas;
+            cout << "\nStok tambahan diubah menjadi " << stokTambahan << " pcs.\n";
+        } else {
+            cout << "\nPenambahan stok dibatalkan!\n";
+            return;
+        }
+    }
+
     cout << "Masukkan Harga Baru                  : ";
     cin >> hargaBaru;
 
@@ -499,6 +556,231 @@ void tampilkanSemuaObat() {
     }
 }
 
+int getTotalTerjual(string idObat) {
+    ifstream file("detail_penjualan.csv");
+
+    if (!file.is_open()) {
+        return 0;
+    }
+
+    string baris;
+    getline(file, baris);
+
+    int total = 0;
+
+    while (getline(file, baris)) {
+        stringstream ss(baris);
+
+        string idTransaksi, tanggal, id, nama, jumlahStr;
+        string harga, expired, subtotal;
+
+        getline(ss, idTransaksi, ',');
+        getline(ss, tanggal, ',');
+        getline(ss, id, ',');
+        getline(ss, nama, ',');
+        getline(ss, jumlahStr, ',');
+        getline(ss, harga, ',');
+        getline(ss, expired, ',');
+        getline(ss, subtotal, ',');
+
+        if (id == idObat) {
+            total += stoi(jumlahStr);
+        }
+    }
+
+    file.close();
+    return total;
+}
+
+int getExpiredTerdekat(string idObat) {
+    int minHari = INT_MAX;
+
+    for (int i = 0; i < detailStok.size(); i++) {
+        if (detailStok[i].id == idObat && detailStok[i].stokBaru > 0) {
+            int sisa = hitungSisaHari(detailStok[i].expiredBaru);
+
+            if (sisa < minHari) {
+                minHari = sisa;
+            }
+        }
+    }
+
+    return minHari;
+}
+
+int hitungSkorPrioritas(int totalTerjual, int totalStok, int sisaExpired) {
+    int skorPenjualan = totalTerjual * 5;
+
+    int skorStok;
+    if (totalStok <= 5) {
+        skorStok = 100;
+    } else if (totalStok <= 10) {
+        skorStok = 80;
+    } else if (totalStok <= 20) {
+        skorStok = 60;
+    } else if (totalStok <= 50) {
+        skorStok = 40;
+    } else {
+        skorStok = 10;
+    }
+
+    int skorExpired;
+    if (sisaExpired == INT_MAX) {
+        skorExpired = 0;
+    } else if (sisaExpired <= 7) {
+        skorExpired = 100;
+    } else if (sisaExpired <= 30) {
+        skorExpired = 80;
+    } else if (sisaExpired <= 90) {
+        skorExpired = 50;
+    } else {
+        skorExpired = 20;
+    }
+
+    return skorPenjualan + skorStok + skorExpired;
+}
+
+int hitungKebutuhanRestock(int totalTerjual, int totalStok) {
+    int targetStok = 50;
+    int kebutuhan = targetStok - totalStok;
+
+    if (kebutuhan < 0) {
+        kebutuhan = 0;
+    }
+
+    if (totalTerjual > kebutuhan) {
+        kebutuhan = totalTerjual;
+    }
+
+    if (kebutuhan <= 0) {
+        kebutuhan = 1;
+    }
+
+    return kebutuhan;
+}
+
+void selectionSortPrioritas(vector<PrioritasObat> &data) {
+    for (int i = 0; i < data.size() - 1; i++) {
+        int maxIndex = i;
+
+        for (int j = i + 1; j < data.size(); j++) {
+            if (data[j].skorPrioritas > data[maxIndex].skorPrioritas) {
+                maxIndex = j;
+            }
+        }
+
+        swap(data[i], data[maxIndex]);
+    }
+}
+
+void prioritasObat() {
+    cout << "\n=== PRIORITAS OBAT UNTUK RESTOCK ===\n";
+
+    if (daftarObat.empty()) {
+        cout << "Belum ada data obat.\n";
+        return;
+    }
+
+    int totalStokGudang = hitungTotalStokGudang();
+    int sisaKapasitas = KAPASITAS_MAKSIMAL_GUDANG - totalStokGudang;
+
+    if (sisaKapasitas <= 0) {
+        cout << "Gudang sudah penuh.\n";
+        cout << "Tidak bisa menambahkan stok baru.\n";
+        return;
+    }
+
+    vector<PrioritasObat> data;
+
+    for (int i = 0; i < daftarObat.size(); i++) {
+        PrioritasObat p;
+
+        p.id = daftarObat[i].id;
+        p.nama = daftarObat[i].nama;
+        p.totalStok = daftarObat[i].totalStok;
+        p.totalTerjual = getTotalTerjual(daftarObat[i].id);
+        p.sisaExpired = getExpiredTerdekat(daftarObat[i].id);
+        p.kebutuhanRestock = hitungKebutuhanRestock(p.totalTerjual, p.totalStok);
+        p.skorPrioritas = hitungSkorPrioritas(
+            p.totalTerjual,
+            p.totalStok,
+            p.sisaExpired
+        );
+
+        if (p.kebutuhanRestock <= sisaKapasitas) {
+            data.push_back(p);
+        }
+    }
+
+    if (data.empty()) {
+        cout << "Tidak ada obat yang bisa direkomendasikan sesuai sisa kapasitas gudang.\n";
+        return;
+    }
+
+    int n = data.size();
+    int kapasitas = sisaKapasitas;
+
+    vector<vector<int>> dp(n + 1, vector<int>(kapasitas + 1, 0));
+
+    for (int i = 1; i <= n; i++) {
+        int berat = data[i - 1].kebutuhanRestock;
+        int nilai = data[i - 1].skorPrioritas;
+
+        for (int w = 1; w <= kapasitas; w++) {
+            if (berat <= w) {
+                int ambil = nilai + dp[i - 1][w - berat];
+                int tidakAmbil = dp[i - 1][w];
+
+                if (ambil > tidakAmbil) {
+                    dp[i][w] = ambil;
+                } else {
+                    dp[i][w] = tidakAmbil;
+                }
+            } else {
+                dp[i][w] = dp[i - 1][w];
+            }
+        }
+    }
+
+    vector<PrioritasObat> hasil;
+    int w = kapasitas;
+
+    for (int i = n; i > 0; i--) {
+        if (dp[i][w] != dp[i - 1][w]) {
+            hasil.push_back(data[i - 1]);
+            w -= data[i - 1].kebutuhanRestock;
+        }
+    }
+
+    selectionSortPrioritas(hasil);
+
+    cout << "\nKapasitas Maksimal Gudang : " << KAPASITAS_MAKSIMAL_GUDANG << endl;
+    cout << "Total Stok Saat Ini      : " << totalStokGudang << endl;
+    cout << "Sisa Kapasitas Gudang    : " << sisaKapasitas << endl;
+
+    cout << "\nRekomendasi Prioritas Restock:\n";
+
+    for (int i = 0; i < hasil.size(); i++) {
+        cout << "\n----------------------------\n";
+        cout << "Prioritas Ke-" << i + 1 << endl;
+        cout << "ID Obat            : " << hasil[i].id << endl;
+        cout << "Nama Obat          : " << hasil[i].nama << endl;
+        cout << "Total Stok         : " << hasil[i].totalStok << endl;
+        cout << "Total Terjual      : " << hasil[i].totalTerjual << endl;
+
+        if (hasil[i].sisaExpired == INT_MAX) {
+            cout << "Expired Terdekat   : Belum ada stok aktif\n";
+        } else if (hasil[i].sisaExpired < 0) {
+            cout << "Expired Terdekat   : Sudah kadaluarsa\n";
+        } else {
+            cout << "Expired Terdekat   : " << hasil[i].sisaExpired << " hari lagi\n";
+        }
+
+        cout << "Saran Restock      : " << hasil[i].kebutuhanRestock << " pcs\n";
+        cout << "Skor Prioritas     : " << hasil[i].skorPrioritas << endl;
+    }
+}
+
 int main() {
     bacaDataObatCSV();
     bacaDetailStokCSV();
@@ -514,7 +796,8 @@ int main() {
         cout << "2. Tambah Stok\n";
         cout << "3. Hapus Obat\n";
         cout << "4. Tampilkan Semua Obat\n";
-        cout << "5. Keluar\n";
+        cout << "5. Prioritas Obat\n";
+        cout << "6. Keluar\n";
         cout << "Pilih Menu : ";
         cin >> pilihan;
 
@@ -536,6 +819,10 @@ int main() {
                 break;
 
             case 5:
+                prioritasObat();
+                break;
+
+            case 6:
                 cout << "\nTerima kasih telah menggunakan program.\n";
                 break;
 
@@ -543,7 +830,7 @@ int main() {
                 cout << "\nMenu tidak tersedia!\n";
         }
 
-    } while (pilihan != 5);
+    } while (pilihan != 6);
 
     return 0;
 }
