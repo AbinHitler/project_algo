@@ -9,6 +9,41 @@
 
 using namespace std;
 
+static int inputInteger(string pesan) {
+    int angka;
+
+    while (true) {
+        cout << pesan;
+        cin >> angka;
+
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(1000, '\n');
+            cout << "Input harus berupa angka!\n";
+        } else {
+            return angka;
+        }
+    }
+}
+
+static double inputDouble(string pesan) {
+    double angka;
+
+    while (true) {
+        cout << pesan;
+        cin >> angka;
+
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(1000, '\n');
+            cout << "Input harus berupa angka!\n";
+        } else {
+            return angka;
+        }
+    }
+}
+
+
 string hashPassword(string password) {
     unsigned long long hash = 0;
 
@@ -116,8 +151,7 @@ int main() {
         cout << "2. Login as Inventory\n";
         cout << "3. Keluar Sistem\n";
         cout << "=====================================\n";
-        cout << "Pilih Menu : ";
-        cin >> pilihan;
+        pilihan = inputInteger("Pilih Menu : ");
 
         switch (pilihan) {
             case 1:

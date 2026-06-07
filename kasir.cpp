@@ -7,6 +7,41 @@
 #include <ctime>
 #include <cctype>
 using namespace std;
+
+static int inputInteger(string pesan) {
+    int angka;
+
+    while (true) {
+        cout << pesan;
+        cin >> angka;
+
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(1000, '\n');
+            cout << "Input harus berupa angka!\n";
+        } else {
+            return angka;
+        }
+    }
+}
+
+static double inputDouble(string pesan) {
+    double angka;
+
+    while (true) {
+        cout << pesan;
+        cin >> angka;
+
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(1000, '\n');
+            cout << "Input harus berupa angka!\n";
+        } else {
+            return angka;
+        }
+    }
+}
+
 #include "kasir.h"
 
 namespace {
@@ -338,8 +373,7 @@ int cariObatByNama() {
     }
 
     int pilihan;
-    cout << "\nPilih nomor obat: ";
-    cin >> pilihan;
+    pilihan = inputInteger("\nPilih nomor obat: ");
 
     if (pilihan < 1 || pilihan > hasil.size()) {
         cout << "Pilihan tidak valid!\n";
@@ -403,8 +437,7 @@ void tambahObatKeKeranjang() {
     cout << "Total Stok : " << obat.totalStok << endl;
 
     int jumlahBeli;
-    cout << "Masukkan jumlah beli: ";
-    cin >> jumlahBeli;
+    jumlahBeli = inputInteger("Masukkan jumlah beli: ");
 
     int stokTersedia = obat.totalStok - jumlahDiKeranjang(obat.id);
 
@@ -544,8 +577,7 @@ void checkout() {
     double bayar;
 
     cout << "\nTotal belanja : Rp " << total << endl;
-    cout << "Masukkan uang bayar: Rp ";
-    cin >> bayar;
+    bayar = inputDouble("Masukkan uang bayar: Rp ");
 
     if (bayar < total) {
         cout << "\nUang tidak cukup. Transaksi dibatalkan.\n";
@@ -577,8 +609,7 @@ void transaksiPenjualan() {
         cout << "2. Lihat Keranjang\n";
         cout << "3. Checkout\n";
         cout << "4. Batalkan Transaksi\n";
-        cout << "Pilih menu: ";
-        cin >> pilihan;
+        pilihan = inputInteger("Pilih menu: ");
 
         switch (pilihan) {
             case 1:
@@ -646,8 +677,7 @@ void menuKasirInternal() {
         cout << "1. Transaksi Penjualan\n";
         cout << "2. Riwayat Transaksi\n";
         cout << "3. Logout\n";
-        cout << "Pilih menu: ";
-        cin >> pilihan;
+        pilihan = inputInteger("Pilih menu: ");
 
         switch (pilihan) {
             case 1:

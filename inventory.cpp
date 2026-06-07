@@ -8,6 +8,41 @@
 #include <ctime>
 #include <climits>
 using namespace std;
+
+static int inputInteger(string pesan) {
+    int angka;
+
+    while (true) {
+        cout << pesan;
+        cin >> angka;
+
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(1000, '\n');
+            cout << "Input harus berupa angka!\n";
+        } else {
+            return angka;
+        }
+    }
+}
+
+static double inputDouble(string pesan) {
+    double angka;
+
+    while (true) {
+        cout << pesan;
+        cin >> angka;
+
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(1000, '\n');
+            cout << "Input harus berupa angka!\n";
+        } else {
+            return angka;
+        }
+    }
+}
+
 #include "inventory.h"
 
 namespace {
@@ -103,8 +138,7 @@ int cariObatByNama() {
     }
 
     int pilihan;
-    cout << "\nPilih nomor obat: ";
-    cin >> pilihan;
+    pilihan = inputInteger("\nPilih nomor obat: ");
 
     if (pilihan < 1 || pilihan > hasil.size()) {
         cout << "Pilihan tidak valid!\n";
@@ -302,8 +336,7 @@ void tambahStok() {
     cout << "Harga Lama    : Rp " << daftarObat[index].hargaTerakhir << endl;
     cout << "Expired Lama  : " << daftarObat[index].expiredTerakhir << endl;
 
-    cout << "\nMasukkan Stok yang Ingin Ditambahkan : ";
-    cin >> stokTambahan;
+    stokTambahan = inputInteger("\nMasukkan Stok yang Ingin Ditambahkan : ");
 
     int totalStokGudang = hitungTotalStokGudang();
     int sisaKapasitas = KAPASITAS_MAKSIMAL_GUDANG - totalStokGudang;
@@ -328,8 +361,7 @@ void tambahStok() {
         cout << "Apakah ingin menambahkan sebanyak " << sisaKapasitas << " saja?\n";
         cout << "1. Ya\n";
         cout << "2. Tidak\n";
-        cout << "Pilih: ";
-        cin >> pilihan;
+        pilihan = inputInteger("Pilih: ");
 
         if (pilihan == 1) {
             stokTambahan = sisaKapasitas;
@@ -340,8 +372,7 @@ void tambahStok() {
         }
     }
 
-    cout << "Masukkan Harga Baru                  : ";
-    cin >> hargaBaru;
+    hargaBaru = inputDouble("Masukkan Harga Baru                  : ");
 
     cin.ignore();
 
@@ -531,8 +562,7 @@ void tampilkanSemuaObat() {
     cout << "2. Tampilkan by Stok Paling Sedikit\n";
     cout << "3. Tampilkan by Stok Paling Banyak\n";
     cout << "4. Tampilkan by Tanggal Expired Terdekat\n";
-    cout << "Pilih Menu : ";
-    cin >> pilihan;
+    pilihan = inputInteger("Pilih Menu : ");
 
     switch (pilihan) {
         case 1:
@@ -818,8 +848,7 @@ void prioritasObat() {
         cout << "1. Reset Data Penjualan\n";
         cout << "2. Kembali\n";
         cout << "=====================================\n";
-        cout << "Pilih Menu : ";
-        cin >> pilihanReset;
+        pilihanReset = inputInteger("Pilih Menu : ");
 
     switch (pilihanReset) {
         case 1:
@@ -857,8 +886,7 @@ void menuInventoryInternal() {
         cout << "4. Tampilkan Semua Obat\n";
         cout << "5. Prioritas Obat\n";
         cout << "6. Logout\n";
-        cout << "Pilih Menu : ";
-        cin >> pilihan;
+        pilihan = inputInteger("Pilih Menu : ");
 
         switch (pilihan) {
             case 1:
