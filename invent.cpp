@@ -673,6 +673,35 @@ void selectionSortPrioritas(vector<PrioritasObat> &data) {
     }
 }
 
+void resetDetailPenjualanCSV() {
+    char konfirmasi;
+
+    cout << "\n=== RESET DATA DETAIL PENJUALAN ===\n";
+    cout << "Reset ini akan menghapus seluruh data penjualan di detail_penjualan.csv.\n";
+    cout << "Data ini memengaruhi perhitungan prioritas obat berdasarkan penjualan tertinggi.\n";
+    cout << "Apakah anda yakin ingin reset? (y/n): ";
+    cin >> konfirmasi;
+
+    konfirmasi = tolower(konfirmasi);
+
+    if (konfirmasi == 'y') {
+        ofstream file("detail_penjualan.csv");
+
+        file << "IDTransaksi,Tanggal,IDObat,NamaObat,JumlahTerjual,HargaSatuan,ExpiredYangDijual,Subtotal\n";
+
+        file.close();
+
+        cout << "\nData detail_penjualan.csv berhasil direset!\n";
+        cout << "Prioritas obat berdasarkan penjualan akan dihitung ulang dari transaksi baru berikutnya.\n";
+    } 
+    else if (konfirmasi == 'n') {
+        cout << "\nReset dibatalkan.\n";
+    } 
+    else {
+        cout << "\nInput tidak valid. Reset dibatalkan.\n";
+    }
+}
+
 void prioritasObat() {
     cout << "\n=== PRIORITAS OBAT UNTUK RESTOCK ===\n";
 
@@ -767,7 +796,7 @@ void prioritasObat() {
         cout << "Nama Obat          : " << hasil[i].nama << endl;
         cout << "Total Stok         : " << hasil[i].totalStok << endl;
         cout << "Total Terjual      : " << hasil[i].totalTerjual << endl;
-
+        
         if (hasil[i].sisaExpired == INT_MAX) {
             cout << "Expired Terdekat   : Belum ada stok aktif\n";
         } else if (hasil[i].sisaExpired < 0) {
@@ -775,9 +804,31 @@ void prioritasObat() {
         } else {
             cout << "Expired Terdekat   : " << hasil[i].sisaExpired << " hari lagi\n";
         }
-
+        
         cout << "Saran Restock      : " << hasil[i].kebutuhanRestock << " pcs\n";
         cout << "Skor Prioritas     : " << hasil[i].skorPrioritas << endl;
+    }
+
+    int pilihanReset;
+    
+        cout << "\n=====================================\n";
+        cout << "1. Reset Data Penjualan\n";
+        cout << "2. Kembali\n";
+        cout << "=====================================\n";
+        cout << "Pilih Menu : ";
+        cin >> pilihanReset;
+
+    switch (pilihanReset) {
+        case 1:
+            resetDetailPenjualanCSV();
+        break;
+    
+        case 2:
+            cout << "\nKembali ke menu inventory.\n";
+        break;
+    
+        default:
+            cout << "\nPilihan tidak valid.\n";
     }
 }
 
