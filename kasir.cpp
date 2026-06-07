@@ -7,6 +7,9 @@
 #include <ctime>
 #include <cctype>
 using namespace std;
+#include "kasir.h"
+
+namespace {
 
 struct Obat {
     string id;
@@ -623,7 +626,13 @@ void tampilkanRiwayatTransaksi() {
 // =========================
 // MENU KASIR
 // =========================
-int main() {
+
+void menuKasirInternal() {
+    daftarObat.clear();
+    detailStok.clear();
+    keranjang.clear();
+    nomorTransaksi = 1;
+
     bacaDataObatCSV();
     bacaDetailStokCSV();
     bacaNomorTransaksi();
@@ -636,7 +645,7 @@ int main() {
         cout << "=====================================\n";
         cout << "1. Transaksi Penjualan\n";
         cout << "2. Riwayat Transaksi\n";
-        cout << "3. Keluar\n";
+        cout << "3. Logout\n";
         cout << "Pilih menu: ";
         cin >> pilihan;
 
@@ -649,15 +658,33 @@ int main() {
                 tampilkanRiwayatTransaksi();
                 break;
 
-            case 3:
-                cout << "\nTerima kasih telah menggunakan sistem kasir.\n";
+            case 3: {
+                char konfirmasi;
+                cout << "\nApakah anda yakin ingin logout? (y/n): ";
+                cin >> konfirmasi;
+                konfirmasi = tolower(konfirmasi);
+
+                if (konfirmasi == 'y') {
+                    cout << "\nLogout berhasil. Kembali ke beranda login.\n";
+                    return;
+                } else if (konfirmasi == 'n') {
+                    cout << "\nLogout dibatalkan.\n";
+                } else {
+                    cout << "\nInput tidak valid. Logout dibatalkan.\n";
+                }
+
                 break;
+            }
 
             default:
                 cout << "\nMenu tidak tersedia!\n";
         }
 
-    } while (pilihan != 3);
+    } while (true);
+}
 
-    return 0;
+} // namespace
+
+void menuKasir() {
+    menuKasirInternal();
 }

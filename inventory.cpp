@@ -8,6 +8,9 @@
 #include <ctime>
 #include <climits>
 using namespace std;
+#include "inventory.h"
+
+namespace {
 
 struct Obat {
     string id, nama, expiredTerakhir;
@@ -832,7 +835,12 @@ void prioritasObat() {
     }
 }
 
-int main() {
+
+void menuInventoryInternal() {
+    daftarObat.clear();
+    detailStok.clear();
+    nomorId = 1;
+
     bacaDataObatCSV();
     bacaDetailStokCSV();
     updateDataObatDariDetail();
@@ -848,7 +856,7 @@ int main() {
         cout << "3. Hapus Obat\n";
         cout << "4. Tampilkan Semua Obat\n";
         cout << "5. Prioritas Obat\n";
-        cout << "6. Keluar\n";
+        cout << "6. Logout\n";
         cout << "Pilih Menu : ";
         cin >> pilihan;
 
@@ -873,15 +881,33 @@ int main() {
                 prioritasObat();
                 break;
 
-            case 6:
-                cout << "\nTerima kasih telah menggunakan program.\n";
+            case 6: {
+                char konfirmasi;
+                cout << "\nApakah anda yakin ingin logout? (y/n): ";
+                cin >> konfirmasi;
+                konfirmasi = tolower(konfirmasi);
+
+                if (konfirmasi == 'y') {
+                    cout << "\nLogout berhasil. Kembali ke beranda login.\n";
+                    return;
+                } else if (konfirmasi == 'n') {
+                    cout << "\nLogout dibatalkan.\n";
+                } else {
+                    cout << "\nInput tidak valid. Logout dibatalkan.\n";
+                }
+
                 break;
+            }
 
             default:
                 cout << "\nMenu tidak tersedia!\n";
         }
 
-    } while (pilihan != 6);
+    } while (true);
+}
 
-    return 0;
+} // namespace
+
+void menuInventory() {
+    menuInventoryInternal();
 }
